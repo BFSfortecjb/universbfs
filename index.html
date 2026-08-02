@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Univers BFS</title>
+<meta name="description" content="Portail des applications BFS">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#080808">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Univers BFS">
+<link rel="apple-touch-icon" href="icons/icone-180.png">
+<link rel="icon" href="icons/icone-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ================= CHARGEMENT ================= -->
+<div id="vue-chargement" class="vue vue-centree active">
+  <div class="bloc-chargement">
+    <img src="icons/icotype-bfs.png" alt="" class="icotype-anim">
+    <p class="texte-discret">Ouverture de l'Univers BFS…</p>
+  </div>
+</div>
+
+<!-- ================= CONNEXION ================= -->
+<div id="vue-connexion" class="vue vue-centree">
+  <div class="carte-auth">
+    <img src="icons/logo-bfs.png" alt="BFS" class="logo-auth">
+    <p class="sous-titre-auth">Univers BFS — le portail de vos applications</p>
+
+    <div id="bandeau-demo" class="bandeau-demo" hidden>
+      <strong>Mode démonstration.</strong> Aucune base n'est connectée : les données
+      affichées sont fictives et rien n'est enregistré.
+      <button type="button" class="lien-inline" data-action="demo-entrer">Entrer en démonstration</button>
+    </div>
+
+    <!-- Onglets -->
+    <div class="onglets-auth" role="tablist">
+      <button class="onglet-auth actif" data-onglet="connexion" role="tab">Connexion</button>
+      <button class="onglet-auth" data-onglet="inscription" role="tab">Créer un compte</button>
+    </div>
+
+    <!-- Formulaire connexion -->
+    <form id="form-connexion" class="form-auth" autocomplete="on">
+      <label for="conn-email">Adresse e-mail</label>
+      <input type="email" id="conn-email" name="email" required autocomplete="username" placeholder="prenom@bfs.fr">
+
+      <label for="conn-mdp">Mot de passe</label>
+      <div class="champ-mdp">
+        <input type="password" id="conn-mdp" name="password" required autocomplete="current-password" placeholder="••••••••">
+        <button type="button" class="btn-oeil" data-cible="conn-mdp" aria-label="Afficher le mot de passe">👁</button>
+      </div>
+
+      <button type="submit" class="btn btn-principal">Se connecter</button>
+      <button type="button" class="lien-discret" data-action="mdp-oublie">Mot de passe oublié ?</button>
+    </form>
+
+    <!-- Formulaire inscription -->
+    <form id="form-inscription" class="form-auth" hidden autocomplete="on">
+      <div class="ligne-double">
+        <div>
+          <label for="insc-prenom">Prénom</label>
+          <input type="text" id="insc-prenom" required autocomplete="given-name">
+        </div>
+        <div>
+          <label for="insc-nom">Nom</label>
+          <input type="text" id="insc-nom" required autocomplete="family-name">
+        </div>
+      </div>
+
+      <label for="insc-email">Adresse e-mail</label>
+      <input type="email" id="insc-email" required autocomplete="username">
+
+      <label for="insc-mdp">Mot de passe</label>
+      <div class="champ-mdp">
+        <input type="password" id="insc-mdp" required minlength="8" autocomplete="new-password">
+        <button type="button" class="btn-oeil" data-cible="insc-mdp" aria-label="Afficher le mot de passe">👁</button>
+      </div>
+      <p class="aide">8 caractères minimum. Ce mot de passe ouvre toutes vos briques : choisissez-le solide.</p>
+
+      <button type="submit" class="btn btn-principal">Créer mon compte</button>
+    </form>
+
+    <p id="message-auth" class="message" hidden></p>
+  </div>
+</div>
+
+<!-- ================= APPLICATION ================= -->
+<div id="vue-app" class="vue">
+
+  <header class="entete">
+    <div class="entete-gauche">
+      <img src="icons/logo-bfs-blanc.png" alt="BFS" class="logo-entete">
+      <span class="titre-entete">Univers</span>
+    </div>
+    <div class="entete-droite">
+      <span id="etat-reseau" class="pastille-reseau" title="Connexion internet"></span>
+      <button class="btn-avatar" id="btn-menu-profil" aria-haspopup="true" aria-expanded="false">
+        <span id="initiales-agent">--</span>
+      </button>
+      <div class="menu-profil" id="menu-profil" hidden>
+        <div class="menu-entete">
+          <strong id="menu-nom">—</strong>
+          <span id="menu-email" class="texte-discret"></span>
+        </div>
+        <button data-action="aller-profil">Mon profil</button>
+        <button data-action="aller-admin" id="btn-menu-admin" hidden>Administration</button>
+        <button data-action="deconnexion" class="danger">Se déconnecter</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="contenu">
+
+    <!-- ---------- Tableau de bord ---------- -->
+    <section id="page-dashboard" class="page active">
+      <div class="entete-page">
+        <div>
+          <h1>Bonjour <span id="prenom-agent">—</span></h1>
+          <p class="texte-discret">Vos applications BFS, réunies au même endroit.</p>
+        </div>
+        <button class="btn btn-principal btn-compact" data-action="aller-catalogue">
+          <span class="plus">+</span> Ajouter une appli
+        </button>
+      </div>
+
+      <div id="grille-tuiles" class="grille-tuiles"></div>
+
+      <div id="etat-vide" class="etat-vide" hidden>
+        <img src="icons/icotype-bfs.png" alt="" class="icotype-vide">
+        <h2>Aucune brique connectée</h2>
+        <p>Ajoutez les applications BFS que vous utilisez : elles apparaîtront ici,
+           et vous y accéderez d'un seul clic.</p>
+        <button class="btn btn-principal" data-action="aller-catalogue">Ajouter ma première appli</button>
+      </div>
+    </section>
+
+    <!-- ---------- Catalogue ---------- -->
+    <section id="page-catalogue" class="page">
+      <div class="entete-page">
+        <div>
+          <button class="lien-retour" data-action="aller-dashboard">← Retour</button>
+          <h1>Ajouter une application</h1>
+          <p class="texte-discret">
+            Connectez une brique pour la voir apparaître sur votre tableau de bord.
+            Il vous faut un compte sur l'application concernée.
+          </p>
+        </div>
+      </div>
+      <div id="liste-catalogue" class="liste-catalogue"></div>
+    </section>
+
+    <!-- ---------- Profil ---------- -->
+    <section id="page-profil" class="page">
+      <div class="entete-page">
+        <div>
+          <button class="lien-retour" data-action="aller-dashboard">← Retour</button>
+          <h1>Mon profil</h1>
+        </div>
+      </div>
+
+      <form id="form-profil" class="carte-formulaire">
+        <div class="ligne-double">
+          <div>
+            <label for="profil-prenom">Prénom</label>
+            <input type="text" id="profil-prenom">
+          </div>
+          <div>
+            <label for="profil-nom">Nom</label>
+            <input type="text" id="profil-nom">
+          </div>
+        </div>
+        <div class="ligne-double">
+          <div>
+            <label for="profil-fonction">Fonction</label>
+            <input type="text" id="profil-fonction" placeholder="Technicien, formateur, secrétariat…">
+          </div>
+          <div>
+            <label for="profil-agence">Agence</label>
+            <input type="text" id="profil-agence" placeholder="Bocage, Finistère…">
+          </div>
+        </div>
+        <label for="profil-email">Adresse e-mail</label>
+        <input type="email" id="profil-email" disabled>
+        <p class="aide">L'adresse e-mail ne se modifie pas ici. Contactez l'administrateur.</p>
+
+        <div class="actions-formulaire">
+          <button type="submit" class="btn btn-principal">Enregistrer</button>
+          <button type="button" class="btn btn-secondaire" data-action="changer-mdp">Changer mon mot de passe</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ---------- Administration ---------- -->
+    <section id="page-admin" class="page">
+      <div class="entete-page">
+        <div>
+          <button class="lien-retour" data-action="aller-dashboard">← Retour</button>
+          <h1>Administration</h1>
+          <p class="texte-discret">Catalogue des briques proposées aux agents BFS.</p>
+        </div>
+        <button class="btn btn-principal btn-compact" data-action="nouvelle-app">
+          <span class="plus">+</span> Nouvelle brique
+        </button>
+      </div>
+
+      <div class="onglets-page">
+        <button class="onglet-page actif" data-onglet-admin="applications">Applications</button>
+        <button class="onglet-page" data-onglet-admin="agents">Agents</button>
+      </div>
+
+      <div id="admin-applications" class="bloc-admin">
+        <div id="tableau-applications" class="tableau"></div>
+      </div>
+
+      <div id="admin-agents" class="bloc-admin" hidden>
+        <div id="tableau-agents" class="tableau"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ================= MODALE GÉNÉRIQUE ================= -->
+<div id="modale" class="modale" hidden>
+  <div class="modale-fond" data-action="fermer-modale"></div>
+  <div class="modale-boite" role="dialog" aria-modal="true">
+    <div class="modale-entete">
+      <h2 id="modale-titre">—</h2>
+      <button class="btn-fermer" data-action="fermer-modale" aria-label="Fermer">×</button>
+    </div>
+    <div id="modale-corps" class="modale-corps"></div>
+    <div id="modale-pied" class="modale-pied"></div>
+  </div>
+</div>
+
+<!-- ================= NOTIFICATIONS ================= -->
+<div id="notifications" class="notifications" aria-live="polite"></div>
+
+<!-- ================= SCRIPTS ================= -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/PO_debug.js"></script>
+<script src="js/PO_config.js"></script>
+<script src="js/PO_core.js"></script>
+<script src="js/PO_demo.js"></script>
+<script src="js/PO_donnees.js"></script>
+<script src="js/PO_auth.js"></script>
+<script src="js/PO_applications.js"></script>
+<script src="js/PO_admin.js"></script>
+<script src="js/PO_app.js"></script>
+</body>
+</html>
