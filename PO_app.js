@@ -118,7 +118,7 @@
       BFS.core.montrerVue('vue-connexion');
       BFS.core.message('#message-auth',
         "Le portail n'arrive pas à joindre sa base de données. " +
-        "Vérifiez le fichier js/PO_config.js et votre connexion internet.", 'erreur');
+        "Vérifiez le fichier PO_config.js et votre connexion internet.", 'erreur');
       return;
     }
 

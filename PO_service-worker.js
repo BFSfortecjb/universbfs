@@ -16,22 +16,22 @@
    version.
    ===================================================================== */
 
-const VERSION_CACHE = 'univers-bfs-v2';
+const VERSION_CACHE = 'univers-bfs-v3';
 
 const COQUILLE = [
   './',
   './index.html',
   './manifest.json',
-  './css/style.css',
-  './js/PO_debug.js',
-  './js/PO_config.js',
-  './js/PO_core.js',
-  './js/PO_demo.js',
-  './js/PO_donnees.js',
-  './js/PO_auth.js',
-  './js/PO_applications.js',
-  './js/PO_admin.js',
-  './js/PO_app.js',
+  './style.css',
+  './PO_debug.js',
+  './PO_config.js',
+  './PO_core.js',
+  './PO_demo.js',
+  './PO_donnees.js',
+  './PO_auth.js',
+  './PO_applications.js',
+  './PO_admin.js',
+  './PO_app.js',
   './icons/logo-bfs.png',
   './icons/logo-bfs-blanc.png',
   './icons/icotype-bfs.png',
