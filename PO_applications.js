@@ -140,8 +140,16 @@ BFS.applications = (function () {
     BFS.debug.info('Ouverture de', app.nom, '→', url);
 
     if (BFS.config.OUVRIR_NOUVEL_ONGLET) {
-      var onglet = window.open(url, '_blank', 'noopener');
-      if (!onglet) {
+      /* Ne PAS passer 'noopener' en 3e argument : la plupart des
+         navigateurs renvoient alors null même quand l'onglet s'est bien
+         ouvert, ce qui déclenchait à tort le repli ci-dessous et faisait
+         naviguer l'onglet Univers BFS en plus du nouvel onglet.
+         On coupe la référence opener manuellement à la place, ce qui
+         donne la même sécurité sans perdre la détection du blocage. */
+      var onglet = window.open(url, '_blank');
+      if (onglet) {
+        onglet.opener = null;
+      } else {
         /* Bloqueur de fenêtres, fréquent en PWA installée : on bascule
            sur une navigation classique plutôt que d'échouer en silence. */
         BFS.debug.info('Ouverture en nouvel onglet bloquée, navigation directe.');
