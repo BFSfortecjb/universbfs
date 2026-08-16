@@ -1,0 +1,20 @@
+name: Garder le projet Supabase BFS actif
+
+on:
+  schedule:
+    - cron: '0 6 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Appel de lecture sur le schéma portail
+        run: |
+          curl --fail --silent --show-error \
+            "https://dqraobwozowtnrieitkp.supabase.co/rest/v1/applications?select=code&limit=1" \
+            -H "apikey: ${SUPABASE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_KEY}" \
+            -H "Accept-Profile: portail"
+        env:
+          SUPABASE_KEY: sb_publishable_UhkImOyooXPnAqTCNMJ4wA_VVqscCmK
