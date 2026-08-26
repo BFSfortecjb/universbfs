@@ -44,6 +44,10 @@
           BFS.admin.nouvelleApplication();
           break;
 
+        case 'provisionner-compte':
+          BFS.admin.provisionnerCompte();
+          break;
+
         case 'fermer-modale':
           BFS.core.fermerModale();
           break;

@@ -190,6 +190,39 @@ BFS.donnees = (function () {
       );
     },
 
+    /* Statut super admin de l'agent connecté — la fonction lit auth.uid()
+       en interne, aucun paramètre à lui passer. */
+    estSuperAdmin: async function () {
+      var r = await sb().rpc('est_super_admin');
+      if (r.error) throw r.error;
+      return r.data === true;
+    },
+
+    /* Provisionne un compte auth.users brut via l'Edge Function dédiée.
+       Réservé au super admin — la fonction elle-même revérifie ce statut
+       côté serveur, ce contrôle client n'est qu'un confort d'affichage.
+       N'écrit rien dans aucune brique : chaque brique reste responsable
+       de rattacher ce compte chez elle. */
+    provisionnerCompte: async function (email) {
+      var r = await sb().functions.invoke('provisionner-compte', {
+        body: { email: email }
+      });
+      if (r.error) {
+        /* Le SDK Supabase n'expose pas toujours le corps JSON de l'erreur
+           renvoyée par la fonction — on tente de le récupérer pour avoir
+           le vrai message (403, 409...) plutôt qu'une erreur générique. */
+        var messageServeur = null;
+        try {
+          if (r.error.context && typeof r.error.context.json === 'function') {
+            var corps = await r.error.context.json();
+            messageServeur = corps && corps.error;
+          }
+        } catch (e) { /* pas grave, on retombe sur le message générique */ }
+        throw new Error(messageServeur || r.error.message);
+      }
+      return r.data;
+    },
+
     /* ================= JOURNAL ================= */
 
     journaliser: async function (action, appId, detail) {

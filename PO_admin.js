@@ -223,6 +223,7 @@ BFS.admin = (function () {
   async function chargerAgents() {
     var zone = $('#tableau-agents');
     zone.innerHTML = '<p class="vide-tableau">Chargement…</p>';
+    afficherBoutonProvisionnement();
     try {
       var agents = await BFS.donnees.listerAgents();
       zone.innerHTML = '';
@@ -235,6 +236,57 @@ BFS.admin = (function () {
       zone.innerHTML = '<p class="vide-tableau">Chargement impossible. ' +
         'Vérifiez que votre profil a bien le rôle « admin ».</p>';
       BFS.debug.erreur('Chargement des agents :', err.message);
+    }
+  }
+
+  /* Le bouton « Provisionner un compte » n'a de sens que pour le super
+     admin (accès de secours, pas un rôle du quotidien — voir MEMOIRE_PROJET).
+     Ce contrôle est un confort d'affichage : la vraie protection est dans
+     l'Edge Function, qui revérifie est_super_admin() côté serveur. */
+  async function afficherBoutonProvisionnement() {
+    var bouton = $('#btn-provisionner-compte');
+    if (!bouton) return;
+    try {
+      bouton.hidden = !(await BFS.donnees.estSuperAdmin());
+    } catch (err) {
+      bouton.hidden = true;
+      BFS.debug.erreur('Vérification super admin impossible :', err.message);
+    }
+  }
+
+  /* ------------------------------------------------------------------
+     Provisionnement d'un compte (super admin uniquement)
+     ------------------------------------------------------------------ */
+  function provisionnerCompte() {
+    var corps =
+      '<label for="pc-email">E-mail du nouvel agent</label>' +
+      '<input type="email" id="pc-email" placeholder="prenom.nom@bfs.fr" autocomplete="off">' +
+      '<p class="aide">Crée uniquement le compte de connexion (mot de passe ' +
+      'initial commun, à changer par l\'agent). Aucune brique ne lui est ' +
+      'ouverte automatiquement — chaque brique doit ensuite le rattacher ' +
+      'chez elle via sa propre pré-inscription.</p>';
+
+    BFS.core.ouvrirModale('Provisionner un compte', corps, [
+      { libelle: 'Annuler', classe: 'btn-secondaire', action: BFS.core.fermerModale },
+      { libelle: 'Créer le compte', classe: 'btn-principal', action: soumettreProvisionnement }
+    ]);
+  }
+
+  async function soumettreProvisionnement() {
+    var champ = $('#pc-email');
+    var email = (champ.value || '').trim().toLowerCase();
+
+    if (!email || email.indexOf('@') === -1) {
+      BFS.core.notifier('Adresse e-mail invalide.', 'erreur');
+      return;
+    }
+
+    try {
+      var resultat = await BFS.donnees.provisionnerCompte(email);
+      BFS.core.fermerModale();
+      BFS.core.notifier('Compte créé pour ' + resultat.email + '.', 'succes');
+    } catch (err) {
+      BFS.core.notifier(BFS.core.traduireErreur(err), 'erreur');
     }
   }
 
@@ -296,7 +348,8 @@ BFS.admin = (function () {
   return {
     afficher: afficher,
     initOnglets: initOnglets,
-    nouvelleApplication: function () { formulaireApplication(null); }
+    nouvelleApplication: function () { formulaireApplication(null); },
+    provisionnerCompte: provisionnerCompte
   };
 })();
 
