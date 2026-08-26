@@ -259,7 +259,13 @@ BFS.admin = (function () {
      ------------------------------------------------------------------ */
   function provisionnerCompte() {
     var corps =
-      '<label for="pc-email">E-mail du nouvel agent</label>' +
+      '<p class="aide">Comptes existants (auth.users est partagé entre ' +
+      'toutes les briques — inutile de recréer un compte déjà listé ici, ' +
+      'demande simplement à la brique concernée de le rattacher).</p>' +
+      '<div id="pc-liste-comptes" class="tableau tableau-compact">' +
+        '<p class="vide-tableau">Chargement…</p>' +
+      '</div>' +
+      '<label for="pc-email" style="margin-top:1rem">E-mail du nouvel agent</label>' +
       '<input type="email" id="pc-email" placeholder="prenom.nom@bfs.fr" autocomplete="off">' +
       '<p class="aide">Crée uniquement le compte de connexion (mot de passe ' +
       'initial commun, à changer par l\'agent). Aucune brique ne lui est ' +
@@ -270,6 +276,41 @@ BFS.admin = (function () {
       { libelle: 'Annuler', classe: 'btn-secondaire', action: BFS.core.fermerModale },
       { libelle: 'Créer le compte', classe: 'btn-principal', action: soumettreProvisionnement }
     ]);
+
+    chargerComptesExistants();
+  }
+
+  async function chargerComptesExistants() {
+    var zone = $('#pc-liste-comptes');
+    if (!zone) return;
+    try {
+      var comptes = await BFS.donnees.listerComptesAuth();
+      if (!zone.isConnected) return; /* modale fermée entre-temps */
+      if (!comptes.length) {
+        zone.innerHTML = '<p class="vide-tableau">Aucun compte pour l\'instant.</p>';
+        return;
+      }
+      zone.innerHTML = '';
+      var liste = creer('div', { classe: 'liste-comptes-existants' });
+      comptes.forEach(function (c) {
+        var ligne = creer('div', {
+          classe: 'tableau-ligne tableau-ligne-compacte',
+          enfants: [
+            creer('span', { classe: 'tuile-nom', texte: c.email || '(sans e-mail)' }),
+            creer('span', {
+              classe: 'texte-discret',
+              texte: c.confirme ? 'confirmé' : 'en attente de confirmation'
+            })
+          ]
+        });
+        liste.appendChild(ligne);
+      });
+      zone.appendChild(liste);
+    } catch (err) {
+      if (!zone.isConnected) return;
+      zone.innerHTML = '<p class="vide-tableau">Liste indisponible.</p>';
+      BFS.debug.erreur('Chargement des comptes existants :', err.message);
+    }
   }
 
   async function soumettreProvisionnement() {

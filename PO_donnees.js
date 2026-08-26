@@ -203,6 +203,26 @@ BFS.donnees = (function () {
        côté serveur, ce contrôle client n'est qu'un confort d'affichage.
        N'écrit rien dans aucune brique : chaque brique reste responsable
        de rattacher ce compte chez elle. */
+    /* Lecture seule des comptes auth.users existants (id, email, date de
+       création, confirmé). Réservé au super admin — utile pour vérifier
+       si un agent a déjà un compte avant de tenter d'en provisionner un
+       (auth.users étant partagé entre toutes les briques, un compte créé
+       ailleurs existe déjà ici). */
+    listerComptesAuth: async function () {
+      var r = await sb().functions.invoke('lister-comptes', { method: 'GET' });
+      if (r.error) {
+        var messageServeur = null;
+        try {
+          if (r.error.context && typeof r.error.context.json === 'function') {
+            var corps = await r.error.context.json();
+            messageServeur = corps && corps.error;
+          }
+        } catch (e) { /* pas grave, on retombe sur le message générique */ }
+        throw new Error(messageServeur || r.error.message);
+      }
+      return (r.data && r.data.comptes) || [];
+    },
+
     provisionnerCompte: async function (email) {
       var r = await sb().functions.invoke('provisionner-compte', {
         body: { email: email }
