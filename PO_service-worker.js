@@ -16,7 +16,7 @@
    version.
    ===================================================================== */
 
-const VERSION_CACHE = 'univers-bfs-v5';
+const VERSION_CACHE = 'univers-bfs-v6';
 
 const COQUILLE = [
   './',

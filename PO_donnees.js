@@ -243,6 +243,27 @@ BFS.donnees = (function () {
       return r.data;
     },
 
+    /* Réinitialise le mot de passe d'un compte existant sur le mot de
+       passe initial commun (Edge Function dédiée, même secret que
+       provisionner-compte). Réservé au super admin — revérifié côté
+       serveur. Prend l'id auth.users de l'agent (= profils.id). */
+    reinitialiserMotDePasse: async function (agentId) {
+      var r = await sb().functions.invoke('reinitialiser-mot-de-passe', {
+        body: { id: agentId }
+      });
+      if (r.error) {
+        var messageServeur = null;
+        try {
+          if (r.error.context && typeof r.error.context.json === 'function') {
+            var corps = await r.error.context.json();
+            messageServeur = corps && corps.error;
+          }
+        } catch (e) { /* pas grave, on retombe sur le message générique */ }
+        throw new Error(messageServeur || r.error.message);
+      }
+      return r.data;
+    },
+
     /* ================= JOURNAL ================= */
 
     journaliser: async function (action, appId, detail) {

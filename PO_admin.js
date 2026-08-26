@@ -16,6 +16,12 @@ BFS.admin = (function () {
   var $ = BFS.core.$;
   var creer = BFS.core.creer;
 
+  /* Statut super admin de l'agent connecté, mémorisé après chaque
+     affichage de l'onglet Agents. Sert à décider si le bouton de
+     réinitialisation de mot de passe apparaît sur chaque ligne — la
+     vraie protection reste côté serveur (Edge Function). */
+  var superAdminActuel = false;
+
   /* ------------------------------------------------------------------
      Ouverture
      ------------------------------------------------------------------ */
@@ -245,13 +251,13 @@ BFS.admin = (function () {
      l'Edge Function, qui revérifie est_super_admin() côté serveur. */
   async function afficherBoutonProvisionnement() {
     var bouton = $('#btn-provisionner-compte');
-    if (!bouton) return;
     try {
-      bouton.hidden = !(await BFS.donnees.estSuperAdmin());
+      superAdminActuel = await BFS.donnees.estSuperAdmin();
     } catch (err) {
-      bouton.hidden = true;
+      superAdminActuel = false;
       BFS.debug.erreur('Vérification super admin impossible :', err.message);
     }
+    if (bouton) bouton.hidden = !superAdminActuel;
   }
 
   /* ------------------------------------------------------------------
@@ -377,12 +383,46 @@ BFS.admin = (function () {
       } catch (err) { BFS.core.notifier(BFS.core.traduireErreur(err), 'erreur'); }
     });
 
+    var actions = [basculeRole, basculeActif];
+
+    if (superAdminActuel) {
+      var reinitMdp = creer('button', { classe: 'btn-icone', texte: 'Réinitialiser mot de passe' });
+      reinitMdp.addEventListener('click', function () { confirmerReinitMdp(agent, nomComplet); });
+      actions.push(reinitMdp);
+    }
+
     return creer('div', {
       classe: 'tableau-ligne',
       enfants: [avatar, texte, creer('div', {
-        classe: 'tableau-actions', enfants: [basculeRole, basculeActif]
+        classe: 'tableau-actions', enfants: actions
       })]
     });
+  }
+
+  /* Réservé au super admin (voir superAdminActuel plus haut). Remet le
+     mot de passe du compte sur le mot de passe initial commun — celui
+     utilisé par provisionner-compte — via l'Edge Function dédiée, qui
+     revérifie est_super_admin() côté serveur. */
+  function confirmerReinitMdp(agent, nomComplet) {
+    BFS.core.ouvrirModale(
+      'Réinitialiser le mot de passe ?',
+      '<p>Le mot de passe de <strong>' + BFS.core.echapper(nomComplet) +
+      '</strong> sera remis sur le mot de passe initial commun. ' +
+      "L'agent devra le changer à sa prochaine connexion.</p>",
+      [
+        { libelle: 'Annuler', classe: 'btn-secondaire', action: BFS.core.fermerModale },
+        { libelle: 'Réinitialiser', classe: 'btn-danger', action: async function () {
+            try {
+              await BFS.donnees.reinitialiserMotDePasse(agent.id);
+              BFS.core.fermerModale();
+              BFS.core.notifier('Mot de passe réinitialisé.', 'succes');
+            } catch (err) {
+              BFS.core.notifier(BFS.core.traduireErreur(err), 'erreur');
+            }
+          }
+        }
+      ]
+    );
   }
 
   /* ------------------------------------------------------------------ */
