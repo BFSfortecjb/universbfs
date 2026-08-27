@@ -191,9 +191,15 @@ BFS.donnees = (function () {
     },
 
     /* Statut super admin de l'agent connecté — la fonction lit auth.uid()
-       en interne, aucun paramètre à lui passer. */
+       en interne, aucun paramètre à lui passer.
+       Elle vit dans le schéma public (colle BFS commune, hors briques),
+       alors que le client du portail est configuré par défaut sur le
+       schéma portail (PO_config.js) — on force donc explicitement le
+       schéma public pour cet appel précis, sinon PostgREST cherche
+       portail.est_super_admin() et échoue avec « Could not find the
+       function ... in the schema cache ». */
     estSuperAdmin: async function () {
-      var r = await sb().rpc('est_super_admin');
+      var r = await sb().schema('public').rpc('est_super_admin');
       if (r.error) throw r.error;
       return r.data === true;
     },
