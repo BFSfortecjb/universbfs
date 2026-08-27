@@ -229,7 +229,7 @@ BFS.admin = (function () {
   async function chargerAgents() {
     var zone = $('#tableau-agents');
     zone.innerHTML = '<p class="vide-tableau">Chargement…</p>';
-    afficherBoutonProvisionnement();
+    await afficherBoutonProvisionnement();
     try {
       var agents = await BFS.donnees.listerAgents();
       zone.innerHTML = '';
