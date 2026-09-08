@@ -270,6 +270,29 @@ BFS.donnees = (function () {
       return r.data;
     },
 
+    /* Envoi de mail commun à toutes les briques BFS (Edge Function
+       envoyer-mail, compte Gmail partagé bfs.noreplay@gmail.com).
+       Accessible à tout compte BFS authentifié, aucune restriction de
+       rôle — ce n'est pas une action privilégiée.
+       destinataires : chaîne ou tableau d'adresses.
+       html est optionnel, texte sert de repli si absent. */
+    envoyerMail: async function (destinataires, sujet, texte, html) {
+      var r = await sb().functions.invoke('envoyer-mail', {
+        body: { a: destinataires, sujet: sujet, texte: texte, html: html }
+      });
+      if (r.error) {
+        var messageServeur = null;
+        try {
+          if (r.error.context && typeof r.error.context.json === 'function') {
+            var corps = await r.error.context.json();
+            messageServeur = corps && corps.error;
+          }
+        } catch (e) { /* pas grave, on retombe sur le message générique */ }
+        throw new Error(messageServeur || r.error.message);
+      }
+      return r.data;
+    },
+
     /* ================= JOURNAL ================= */
 
     journaliser: async function (action, appId, detail) {
