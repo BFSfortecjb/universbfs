@@ -30,6 +30,15 @@
           BFS.applications.afficherCatalogue();
           break;
 
+        case 'aller-faq':
+          fermerMenuProfil();
+          BFS.faq.afficher();
+          break;
+
+        case 'nouvel-article':
+          BFS.faq.nouvelArticle();
+          break;
+
         case 'aller-profil':
           fermerMenuProfil();
           BFS.core.montrerPage('page-profil');
@@ -110,6 +119,7 @@
     BFS.auth.initEcran();
     BFS.auth.initFormulaireProfil();
     BFS.admin.initOnglets();
+    BFS.faq.initTableauDeBord();
 
     /* Le mode démonstration n'ouvre jamais de session tout seul :
        l'utilisateur clique sur « Entrer en démonstration ». */

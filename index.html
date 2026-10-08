@@ -1,3 +1,9 @@
+<!--
+  © 2026 Univers BFS — Jérémy Bizeul — Vigie-lance, pour BFS Prévention (Bretagne Formation Sécurité).
+  Tous droits réservés. Toute reproduction, distribution ou réutilisation de ce code,
+  en tout ou partie, sans autorisation écrite préalable est interdite.
+  Auteur : Jérémy Bizeul — Vigie-lance — https://www.bfs-prevention.fr
+-->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -5,6 +11,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Univers BFS</title>
 <meta name="description" content="Portail des applications BFS">
+<meta name="author" content="Jérémy Bizeul — Vigie-lance (pour BFS Prévention)">
+<meta name="copyright" content="© 2026 Jérémy Bizeul — Vigie-lance / BFS Prévention. Tous droits réservés.">
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
@@ -112,6 +120,7 @@
           <strong id="menu-nom">—</strong>
           <span id="menu-email" class="texte-discret"></span>
         </div>
+        <button data-action="aller-faq">FAQ</button>
         <button data-action="aller-profil">Mon profil</button>
         <button data-action="aller-admin" id="btn-menu-admin" hidden>Administration</button>
         <button data-action="deconnexion" class="danger">Se déconnecter</button>
@@ -133,6 +142,11 @@
         </button>
       </div>
 
+      <form id="form-faq-dashboard" class="faq-dashboard" role="search">
+        <input type="text" id="faq-dashboard-recherche" placeholder="Une question ? Ex : stagiaire absent, matériel en panne…" autocomplete="off" aria-label="Rechercher dans la FAQ">
+        <button type="submit" class="btn btn-secondaire btn-compact">FAQ</button>
+      </form>
+
       <div id="grille-tuiles" class="grille-tuiles"></div>
 
       <div id="etat-vide" class="etat-vide" hidden>
@@ -142,6 +156,23 @@
            et vous y accéderez d'un seul clic.</p>
         <button class="btn btn-principal" data-action="aller-catalogue">Ajouter ma première appli</button>
       </div>
+    </section>
+
+    <!-- ---------- FAQ ---------- -->
+    <section id="page-faq" class="page">
+      <div class="entete-page">
+        <div>
+          <button class="lien-retour" data-action="aller-dashboard">← Retour</button>
+          <h1>FAQ</h1>
+          <p class="texte-discret">Que faire dans telle situation ? Tapez un mot pour trouver la procédure.</p>
+        </div>
+        <button id="btn-nouvel-article" class="btn btn-principal btn-compact" data-action="nouvel-article" hidden>
+          <span class="plus">+</span> Nouvel article
+        </button>
+      </div>
+      <input type="text" id="faq-recherche" class="faq-recherche" placeholder="Rechercher (ex : absence, deuil, panne, réclamation)…" autocomplete="off" aria-label="Rechercher dans la FAQ">
+      <p id="faq-compteur" class="texte-discret faq-compteur"></p>
+      <div id="faq-liste" class="faq-liste"></div>
     </section>
 
     <!-- ---------- Catalogue ---------- -->
@@ -249,6 +280,11 @@
 <!-- ================= NOTIFICATIONS ================= -->
 <div id="notifications" class="notifications" aria-live="polite"></div>
 
+<footer class="site-copyright" style="max-width:640px;margin:0 auto;padding:16px 20px 24px;text-align:center;font-size:11px;color:#464645;opacity:.7;line-height:1.5;">
+  Outil mis à disposition par BFS Prévention (Bretagne Formation Sécurité) — © 2026 — Tous droits
+  réservés. Copie, reproduction ou réutilisation interdites sans autorisation.
+</footer>
+
 <!-- ================= SCRIPTS ================= -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="PO_debug.js"></script>
@@ -259,6 +295,11 @@
 <script src="PO_auth.js"></script>
 <script src="PO_applications.js"></script>
 <script src="PO_admin.js"></script>
+<script src="PO_faq.js"></script>
 <script src="PO_app.js"></script>
+<script>
+console.log('%c© 2026 Jérémy Bizeul — Vigie-lance, pour BFS Prévention.', 'color:#c9a227; font-weight:bold; font-size:12px;');
+console.log('Univers BFS — outil original. Toute reproduction ou réutilisation de ce code sans autorisation écrite est interdite. Contact : https://www.bfs-prevention.fr');
+</script>
 </body>
 </html>
