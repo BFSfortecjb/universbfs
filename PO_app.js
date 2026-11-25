@@ -30,15 +30,6 @@
           BFS.applications.afficherCatalogue();
           break;
 
-        case 'aller-faq':
-          fermerMenuProfil();
-          BFS.faq.afficher();
-          break;
-
-        case 'nouvel-article':
-          BFS.faq.nouvelArticle();
-          break;
-
         case 'aller-profil':
           fermerMenuProfil();
           BFS.core.montrerPage('page-profil');
@@ -51,10 +42,6 @@
 
         case 'nouvelle-app':
           BFS.admin.nouvelleApplication();
-          break;
-
-        case 'provisionner-compte':
-          BFS.admin.provisionnerCompte();
           break;
 
         case 'fermer-modale':
@@ -119,7 +106,6 @@
     BFS.auth.initEcran();
     BFS.auth.initFormulaireProfil();
     BFS.admin.initOnglets();
-    BFS.faq.initTableauDeBord();
 
     /* Le mode démonstration n'ouvre jamais de session tout seul :
        l'utilisateur clique sur « Entrer en démonstration ». */
@@ -132,7 +118,7 @@
       BFS.core.montrerVue('vue-connexion');
       BFS.core.message('#message-auth',
         "Le portail n'arrive pas à joindre sa base de données. " +
-        "Vérifiez le fichier PO_config.js et votre connexion internet.", 'erreur');
+        "Vérifiez le fichier js/PO_config.js et votre connexion internet.", 'erreur');
       return;
     }
 
