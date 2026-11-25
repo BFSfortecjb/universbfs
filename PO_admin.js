@@ -16,6 +16,12 @@ BFS.admin = (function () {
   var $ = BFS.core.$;
   var creer = BFS.core.creer;
 
+  /* Statut super admin de l'agent connecté, mémorisé après chaque
+     affichage de l'onglet Agents. Sert à décider si le bouton de
+     réinitialisation de mot de passe apparaît sur chaque ligne — la
+     vraie protection reste côté serveur (Edge Function). */
+  var superAdminActuel = false;
+
   /* ------------------------------------------------------------------
      Ouverture
      ------------------------------------------------------------------ */
@@ -223,6 +229,7 @@ BFS.admin = (function () {
   async function chargerAgents() {
     var zone = $('#tableau-agents');
     zone.innerHTML = '<p class="vide-tableau">Chargement…</p>';
+    await afficherBoutonProvisionnement();
     try {
       var agents = await BFS.donnees.listerAgents();
       zone.innerHTML = '';
@@ -235,6 +242,98 @@ BFS.admin = (function () {
       zone.innerHTML = '<p class="vide-tableau">Chargement impossible. ' +
         'Vérifiez que votre profil a bien le rôle « admin ».</p>';
       BFS.debug.erreur('Chargement des agents :', err.message);
+    }
+  }
+
+  /* Le bouton « Provisionner un compte » n'a de sens que pour le super
+     admin (accès de secours, pas un rôle du quotidien — voir MEMOIRE_PROJET).
+     Ce contrôle est un confort d'affichage : la vraie protection est dans
+     l'Edge Function, qui revérifie est_super_admin() côté serveur. */
+  async function afficherBoutonProvisionnement() {
+    var bouton = $('#btn-provisionner-compte');
+    try {
+      superAdminActuel = await BFS.donnees.estSuperAdmin();
+    } catch (err) {
+      superAdminActuel = false;
+      BFS.debug.erreur('Vérification super admin impossible :', err.message);
+    }
+    if (bouton) bouton.hidden = !superAdminActuel;
+  }
+
+  /* ------------------------------------------------------------------
+     Provisionnement d'un compte (super admin uniquement)
+     ------------------------------------------------------------------ */
+  function provisionnerCompte() {
+    var corps =
+      '<p class="aide">Comptes existants (auth.users est partagé entre ' +
+      'toutes les briques — inutile de recréer un compte déjà listé ici, ' +
+      'demande simplement à la brique concernée de le rattacher).</p>' +
+      '<div id="pc-liste-comptes" class="tableau tableau-compact">' +
+        '<p class="vide-tableau">Chargement…</p>' +
+      '</div>' +
+      '<label for="pc-email" style="margin-top:1rem">E-mail du nouvel agent</label>' +
+      '<input type="email" id="pc-email" placeholder="prenom.nom@bfs.fr" autocomplete="off">' +
+      '<p class="aide">Crée uniquement le compte de connexion (mot de passe ' +
+      'initial commun, à changer par l\'agent). Aucune brique ne lui est ' +
+      'ouverte automatiquement — chaque brique doit ensuite le rattacher ' +
+      'chez elle via sa propre pré-inscription.</p>';
+
+    BFS.core.ouvrirModale('Provisionner un compte', corps, [
+      { libelle: 'Annuler', classe: 'btn-secondaire', action: BFS.core.fermerModale },
+      { libelle: 'Créer le compte', classe: 'btn-principal', action: soumettreProvisionnement }
+    ]);
+
+    chargerComptesExistants();
+  }
+
+  async function chargerComptesExistants() {
+    var zone = $('#pc-liste-comptes');
+    if (!zone) return;
+    try {
+      var comptes = await BFS.donnees.listerComptesAuth();
+      if (!zone.isConnected) return; /* modale fermée entre-temps */
+      if (!comptes.length) {
+        zone.innerHTML = '<p class="vide-tableau">Aucun compte pour l\'instant.</p>';
+        return;
+      }
+      zone.innerHTML = '';
+      var liste = creer('div', { classe: 'liste-comptes-existants' });
+      comptes.forEach(function (c) {
+        var ligne = creer('div', {
+          classe: 'tableau-ligne tableau-ligne-compacte',
+          enfants: [
+            creer('span', { classe: 'tuile-nom', texte: c.email || '(sans e-mail)' }),
+            creer('span', {
+              classe: 'texte-discret',
+              texte: c.confirme ? 'confirmé' : 'en attente de confirmation'
+            })
+          ]
+        });
+        liste.appendChild(ligne);
+      });
+      zone.appendChild(liste);
+    } catch (err) {
+      if (!zone.isConnected) return;
+      zone.innerHTML = '<p class="vide-tableau">Liste indisponible.</p>';
+      BFS.debug.erreur('Chargement des comptes existants :', err.message);
+    }
+  }
+
+  async function soumettreProvisionnement() {
+    var champ = $('#pc-email');
+    var email = (champ.value || '').trim().toLowerCase();
+
+    if (!email || email.indexOf('@') === -1) {
+      BFS.core.notifier('Adresse e-mail invalide.', 'erreur');
+      return;
+    }
+
+    try {
+      var resultat = await BFS.donnees.provisionnerCompte(email);
+      BFS.core.fermerModale();
+      BFS.core.notifier('Compte créé pour ' + resultat.email + '.', 'succes');
+    } catch (err) {
+      BFS.core.notifier(BFS.core.traduireErreur(err), 'erreur');
     }
   }
 
@@ -284,19 +383,54 @@ BFS.admin = (function () {
       } catch (err) { BFS.core.notifier(BFS.core.traduireErreur(err), 'erreur'); }
     });
 
+    var actions = [basculeRole, basculeActif];
+
+    if (superAdminActuel) {
+      var reinitMdp = creer('button', { classe: 'btn-icone', texte: 'Réinitialiser mot de passe' });
+      reinitMdp.addEventListener('click', function () { confirmerReinitMdp(agent, nomComplet); });
+      actions.push(reinitMdp);
+    }
+
     return creer('div', {
       classe: 'tableau-ligne',
       enfants: [avatar, texte, creer('div', {
-        classe: 'tableau-actions', enfants: [basculeRole, basculeActif]
+        classe: 'tableau-actions', enfants: actions
       })]
     });
+  }
+
+  /* Réservé au super admin (voir superAdminActuel plus haut). Remet le
+     mot de passe du compte sur le mot de passe initial commun — celui
+     utilisé par provisionner-compte — via l'Edge Function dédiée, qui
+     revérifie est_super_admin() côté serveur. */
+  function confirmerReinitMdp(agent, nomComplet) {
+    BFS.core.ouvrirModale(
+      'Réinitialiser le mot de passe ?',
+      '<p>Le mot de passe de <strong>' + BFS.core.echapper(nomComplet) +
+      '</strong> sera remis sur le mot de passe initial commun. ' +
+      "L'agent devra le changer à sa prochaine connexion.</p>",
+      [
+        { libelle: 'Annuler', classe: 'btn-secondaire', action: BFS.core.fermerModale },
+        { libelle: 'Réinitialiser', classe: 'btn-danger', action: async function () {
+            try {
+              await BFS.donnees.reinitialiserMotDePasse(agent.id);
+              BFS.core.fermerModale();
+              BFS.core.notifier('Mot de passe réinitialisé.', 'succes');
+            } catch (err) {
+              BFS.core.notifier(BFS.core.traduireErreur(err), 'erreur');
+            }
+          }
+        }
+      ]
+    );
   }
 
   /* ------------------------------------------------------------------ */
   return {
     afficher: afficher,
     initOnglets: initOnglets,
-    nouvelleApplication: function () { formulaireApplication(null); }
+    nouvelleApplication: function () { formulaireApplication(null); },
+    provisionnerCompte: provisionnerCompte
   };
 })();
 

@@ -190,6 +190,115 @@ BFS.donnees = (function () {
       );
     },
 
+    /* Statut super admin de l'agent connecté — la fonction lit auth.uid()
+       en interne, aucun paramètre à lui passer.
+       Elle vit dans le schéma public (colle BFS commune, hors briques),
+       alors que le client du portail est configuré par défaut sur le
+       schéma portail (PO_config.js) — on force donc explicitement le
+       schéma public pour cet appel précis, sinon PostgREST cherche
+       portail.est_super_admin() et échoue avec « Could not find the
+       function ... in the schema cache ». */
+    estSuperAdmin: async function () {
+      var r = await sb().schema('public').rpc('est_super_admin');
+      if (r.error) throw r.error;
+      return r.data === true;
+    },
+
+    /* Provisionne un compte auth.users brut via l'Edge Function dédiée.
+       Réservé au super admin — la fonction elle-même revérifie ce statut
+       côté serveur, ce contrôle client n'est qu'un confort d'affichage.
+       N'écrit rien dans aucune brique : chaque brique reste responsable
+       de rattacher ce compte chez elle. */
+    /* Lecture seule des comptes auth.users existants (id, email, date de
+       création, confirmé). Réservé au super admin — utile pour vérifier
+       si un agent a déjà un compte avant de tenter d'en provisionner un
+       (auth.users étant partagé entre toutes les briques, un compte créé
+       ailleurs existe déjà ici). */
+    listerComptesAuth: async function () {
+      var r = await sb().functions.invoke('lister-comptes', { method: 'GET' });
+      if (r.error) {
+        var messageServeur = null;
+        try {
+          if (r.error.context && typeof r.error.context.json === 'function') {
+            var corps = await r.error.context.json();
+            messageServeur = corps && corps.error;
+          }
+        } catch (e) { /* pas grave, on retombe sur le message générique */ }
+        throw new Error(messageServeur || r.error.message);
+      }
+      return (r.data && r.data.comptes) || [];
+    },
+
+    provisionnerCompte: async function (email) {
+      var r = await sb().functions.invoke('provisionner-compte', {
+        body: { email: email }
+      });
+      if (r.error) {
+        /* Le SDK Supabase n'expose pas toujours le corps JSON de l'erreur
+           renvoyée par la fonction — on tente de le récupérer pour avoir
+           le vrai message (403, 409...) plutôt qu'une erreur générique. */
+        var messageServeur = null;
+        try {
+          if (r.error.context && typeof r.error.context.json === 'function') {
+            var corps = await r.error.context.json();
+            messageServeur = corps && corps.error;
+          }
+        } catch (e) { /* pas grave, on retombe sur le message générique */ }
+        throw new Error(messageServeur || r.error.message);
+      }
+      return r.data;
+    },
+
+    /* Réinitialise le mot de passe d'un compte existant sur le mot de
+       passe initial commun (Edge Function dédiée, même secret que
+       provisionner-compte). Réservé au super admin — revérifié côté
+       serveur. Prend l'id auth.users de l'agent (= profils.id). */
+    reinitialiserMotDePasse: async function (agentId) {
+      var r = await sb().functions.invoke('reinitialiser-mot-de-passe', {
+        body: { id: agentId }
+      });
+      if (r.error) {
+        var messageServeur = null;
+        try {
+          if (r.error.context && typeof r.error.context.json === 'function') {
+            var corps = await r.error.context.json();
+            messageServeur = corps && corps.error;
+          }
+        } catch (e) { /* pas grave, on retombe sur le message générique */ }
+        throw new Error(messageServeur || r.error.message);
+      }
+      return r.data;
+    },
+
+    /* Envoi de mail commun à toutes les briques BFS (Edge Function
+       envoyer-mail, compte Gmail partagé bfs.noreplay@gmail.com).
+       Accessible à tout compte BFS authentifié, aucune restriction de
+       rôle — ce n'est pas une action privilégiée.
+       destinataires : chaîne ou tableau d'adresses.
+       html est optionnel, texte sert de repli si absent.
+       piecesJointes (optionnel) : tableau [{ nom, base64 }], base64
+       sans le préfixe data:...;base64, — limite ~20 Mo au total
+       (ajouté le 08/09/2026 pour BFS Habelec). */
+    envoyerMail: async function (destinataires, sujet, texte, html, piecesJointes) {
+      var r = await sb().functions.invoke('envoyer-mail', {
+        body: {
+          a: destinataires, sujet: sujet, texte: texte, html: html,
+          pieces_jointes: piecesJointes
+        }
+      });
+      if (r.error) {
+        var messageServeur = null;
+        try {
+          if (r.error.context && typeof r.error.context.json === 'function') {
+            var corps = await r.error.context.json();
+            messageServeur = corps && corps.error;
+          }
+        } catch (e) { /* pas grave, on retombe sur le message générique */ }
+        throw new Error(messageServeur || r.error.message);
+      }
+      return r.data;
+    },
+
     /* ================= JOURNAL ================= */
 
     journaliser: async function (action, appId, detail) {
