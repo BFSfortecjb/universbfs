@@ -27,7 +27,10 @@ BFS.alertes = (function () {
     { schema: 'habelec',  code: 'bfs-habelec',  nom: 'Habelec' },
     { schema: 'caces',    code: 'bfs-caces',    nom: 'CACES' },
     { schema: 'pointage', code: 'pointage-bfs', nom: 'Pointage' },
-    { schema: 'hse',      code: 'bfs-hse',      nom: 'HSE' }
+    { schema: 'hse',      code: 'bfs-hse',      nom: 'HSE' },
+    /* Portail : visible des administrateurs seulement (comptes à activer,
+       agents sans brique). Un clic ouvre l'administration. */
+    { schema: 'portail',  code: null,           nom: 'Portail', action: 'admin' }
   ];
 
   var ORDRE = { retard: 0, proche: 1, info: 2 };
@@ -90,7 +93,9 @@ BFS.alertes = (function () {
     el.appendChild(creer('span', { classe: 'alerte-texte', texte: texte }));
     if (l.echeance) el.appendChild(creer('span', { classe: 'alerte-date', texte: BFS.core.dateCourte(l.echeance) }));
 
-    if (app && BFS.core.estUrlValide(app.url)) {
+    if (l.brique.action === 'admin') {
+      el.addEventListener('click', function () { BFS.admin.afficher(); });
+    } else if (app && BFS.core.estUrlValide(app.url)) {
       el.addEventListener('click', function () {
         var onglet = window.open(app.url, '_blank');
         if (onglet) onglet.opener = null; else location.href = app.url;
