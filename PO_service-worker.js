@@ -16,7 +16,7 @@
    version.
    ===================================================================== */
 
-const VERSION_CACHE = 'univers-bfs-v7';
+const VERSION_CACHE = 'univers-bfs-v8';
 
 const COQUILLE = [
   './',
@@ -32,6 +32,7 @@ const COQUILLE = [
   './PO_applications.js',
   './PO_admin.js',
   './PO_faq.js',
+  './PO_alertes.js',
   './PO_app.js',
   './icons/logo-bfs.png',
   './icons/logo-bfs-blanc.png',

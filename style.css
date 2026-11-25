@@ -624,3 +624,52 @@ input:disabled { opacity: .55; cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+
+/* ---------------------------------------------------------------------
+   FAQ
+   --------------------------------------------------------------------- */
+.faq-dashboard { display: flex; gap: .6rem; margin: 0 0 1.25rem; }
+.faq-dashboard input { flex: 1; margin: 0; }
+.faq-recherche { margin-bottom: .5rem; font-size: 1rem; }
+.faq-compteur { margin: 0 0 .75rem; min-height: 1.1em; }
+.faq-liste { display: flex; flex-direction: column; gap: .6rem; }
+.faq-categorie { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--texte-doux); margin: 1rem 0 .1rem; }
+.faq-carte {
+  display: flex; flex-direction: column; gap: .35rem; text-align: left; width: 100%;
+  background: var(--fond-carte); border: 1px solid var(--bordure); border-radius: var(--rayon-sm);
+  padding: .85rem 1rem; cursor: pointer; font: inherit; color: var(--texte);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.faq-carte:hover, .faq-carte:focus-visible { border-color: var(--jaune); box-shadow: var(--ombre); outline: none; }
+.faq-carte-titre { font-weight: 700; font-size: .95rem; line-height: 1.3; }
+.faq-carte-extrait { font-size: .85rem; color: var(--texte-doux); line-height: 1.4; }
+.faq-tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .1rem; }
+.faq-tag { font-size: .7rem; padding: .1rem .5rem; border-radius: 99px; background: var(--fond); border: 1px solid var(--bordure); color: var(--texte-doux); }
+.faq-lecture { white-space: pre-wrap; line-height: 1.55; font-size: .95rem; }
+.faq-meta { font-size: .78rem; color: var(--texte-doux); margin: .75rem 0 0; }
+.faq-case { display: flex; align-items: center; gap: .5rem; margin-top: .75rem; }
+.faq-case input { width: auto; margin: 0; }
+@media (max-width: 560px) { .faq-dashboard { flex-wrap: wrap; } .faq-dashboard .btn { width: 100%; } }
+
+
+/* ---------------------------------------------------------------------
+   Bloc « À traiter » du tableau de bord
+   --------------------------------------------------------------------- */
+.bloc-alertes { margin: 0 0 1.5rem; }
+.bloc-alertes h2 { font-size: 1.05rem; margin: 0 0 .5rem; }
+.alerte-groupe { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--texte-doux); margin: .8rem 0 .3rem; }
+.alerte-groupe.retard { color: var(--rouge); }
+.alerte-ligne {
+  display: flex; align-items: center; gap: .75rem; width: 100%; text-align: left;
+  background: var(--fond-carte); border: 1px solid var(--bordure); border-left: 4px solid var(--bordure);
+  border-radius: var(--rayon-sm); padding: .6rem .85rem; margin-bottom: .4rem;
+  font: inherit; color: var(--texte); cursor: pointer;
+}
+.alerte-ligne.retard { border-left-color: var(--rouge); }
+.alerte-ligne.proche { border-left-color: var(--jaune); }
+.alerte-ligne:hover { box-shadow: var(--ombre); }
+.alerte-brique { font-size: .7rem; font-weight: 700; text-transform: uppercase; color: var(--texte-doux); min-width: 4.5rem; }
+.alerte-texte { flex: 1; font-size: .9rem; }
+.alerte-date { font-size: .8rem; color: var(--texte-doux); white-space: nowrap; }
+@media (max-width: 560px) { .alerte-ligne { flex-wrap: wrap; } .alerte-brique { min-width: 0; } }
