@@ -68,18 +68,65 @@ BFS.alertes = (function () {
              String(a.echeance || '9999').localeCompare(String(b.echeance || '9999'));
     });
 
+    toutes = lignes;
+    appsCourantes = apps;
+    filtre = null;
+    dessiner();
+  }
+
+  var toutes = [], appsCourantes = [], filtre = null;
+
+  function somme(liste) {
+    return liste.reduce(function (t, l) { return t + (Number(l.nombre) || 1); }, 0);
+  }
+
+  function dessiner() {
+    var bloc = $('#bloc-alertes');
     var zone = $('#liste-alertes');
     zone.innerHTML = '';
-    bloc.hidden = lignes.length === 0;
-    if (!lignes.length) return;
+    bloc.hidden = toutes.length === 0;
+    if (!toutes.length) return;
 
+    /* Compteurs (variante C) : calculés sur l'ensemble, pas sur le filtre */
+    var nbRetard = somme(toutes.filter(function (l) { return l.urgence === 'retard'; }));
+    var nbProche = somme(toutes.filter(function (l) { return l.urgence === 'proche'; }));
+    var briques = [];
+    toutes.forEach(function (l) { if (briques.indexOf(l.brique.schema) < 0) briques.push(l.brique.schema); });
+
+    var compteurs = creer('div', { classe: 'alerte-compteurs' });
+    [[nbRetard, 'en retard', 'retard'], [nbProche, 'à venir', 'proche'], [briques.length, briques.length > 1 ? 'briques concernées' : 'brique concernée', '']]
+      .forEach(function (c) {
+        compteurs.appendChild(creer('div', { classe: 'alerte-compteur ' + c[2], enfants: [
+          creer('span', { classe: 'alerte-chiffre', texte: String(c[0]) }),
+          creer('span', { classe: 'alerte-compteur-texte', texte: c[1] })
+        ] }));
+      });
+    zone.appendChild(compteurs);
+
+    /* Filtre par brique */
+    if (briques.length > 1) {
+      var filtres = creer('div', { classe: 'alerte-filtres' });
+      var puce = function (libelle, valeur) {
+        var p = creer('button', { classe: 'alerte-filtre' + (filtre === valeur ? ' actif' : ''),
+          texte: libelle, attributs: { type: 'button' } });
+        p.addEventListener('click', function () { filtre = valeur; dessiner(); });
+        filtres.appendChild(p);
+      };
+      puce('Toutes', null);
+      BRIQUES.forEach(function (b) {
+        if (briques.indexOf(b.schema) >= 0) puce(b.nom, b.schema);
+      });
+      zone.appendChild(filtres);
+    }
+
+    var affichees = toutes.filter(function (l) { return !filtre || l.brique.schema === filtre; });
     var groupe = null;
-    lignes.forEach(function (l) {
+    affichees.forEach(function (l) {
       if (l.urgence !== groupe) {
         zone.appendChild(creer('h3', { classe: 'alerte-groupe ' + l.urgence, texte: LIBELLES[l.urgence] }));
         groupe = l.urgence;
       }
-      zone.appendChild(ligne(l, apps));
+      zone.appendChild(ligne(l, appsCourantes));
     });
   }
 

@@ -673,3 +673,12 @@ input:disabled { opacity: .55; cursor: not-allowed; }
 .alerte-texte { flex: 1; font-size: .9rem; }
 .alerte-date { font-size: .8rem; color: var(--texte-doux); white-space: nowrap; }
 @media (max-width: 560px) { .alerte-ligne { flex-wrap: wrap; } .alerte-brique { min-width: 0; } }
+.alerte-compteurs { display: flex; gap: .6rem; flex-wrap: wrap; margin: 0 0 .7rem; }
+.alerte-compteur { flex: 1; min-width: 7rem; background: #fff; border: 1px solid var(--bordure, #e3e3e3); border-radius: 10px; padding: .55rem .8rem; display: flex; flex-direction: column; }
+.alerte-chiffre { font-size: 1.5rem; font-weight: 800; line-height: 1.1; }
+.alerte-compteur.retard .alerte-chiffre { color: var(--rouge); }
+.alerte-compteur.proche .alerte-chiffre { color: #a87400; }
+.alerte-compteur-texte { font-size: .75rem; color: var(--texte-doux); }
+.alerte-filtres { display: flex; gap: .4rem; flex-wrap: wrap; margin: 0 0 .4rem; }
+.alerte-filtre { border: 1px solid var(--bordure, #d8d8d8); background: #fff; border-radius: 999px; padding: .25rem .8rem; font-size: .8rem; cursor: pointer; font-family: inherit; }
+.alerte-filtre.actif { background: var(--noir, #222); color: #fff; border-color: var(--noir, #222); }
